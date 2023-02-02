@@ -4,6 +4,10 @@ const Schema   = mongoose.Schema;
 
 const productSchema = new Schema(
     {
+        sellerId:{
+            type: String,
+            required:true,
+        },
         name :{
             type:String,
             required:true,
@@ -31,17 +35,5 @@ const productSchema = new Schema(
     },{timestamps:true},
 );
 
-
-export const Product = mongoose.model('Product',productSchema);
-
-/* 
-id
-name
-image
-description
-price
-category
-quantity
-created_by
-created_at  
-*/
+const Product = mongoose.model('Product',productSchema);
+module.exports = Product;

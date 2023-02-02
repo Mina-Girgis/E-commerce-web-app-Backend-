@@ -13,6 +13,7 @@ const cartSchema = new Schema(
         },
         createdBy:{
             type:mongoose.Schema.Types.ObjectId,
+            required:true
         },
         products :[
             {
@@ -35,14 +36,6 @@ const cartSchema = new Schema(
 ); 
 
 
-export const Cart = mongoose.model('Cart',cartSchema);
+const Cart = mongoose.model('Cart',cartSchema);
+module.exports = Cart;
 
-
-/*
-id
-notes
-totalPrice
-[ { productName, quantity, totalPrice } ]
-created_by
-created_at
-*/

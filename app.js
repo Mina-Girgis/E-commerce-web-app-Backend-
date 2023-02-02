@@ -1,14 +1,37 @@
 // require
 const express = require('express');
 const mongoose = require('mongoose');
-const User = require('./models/user');
+const multer = require('multer');
+const path  = require('path');
 const bodyParser = require("body-parser");
 const { collection } = require('./models/user');
 
+// models
+const User = require('./models/user');
+const Product = require('./models/product');
+const Cart = require('./models/cart');
+
+
+
+//upload images
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, './uploads')
+    },
+    filename: function (req, file, cb) {
+      console.log(file);
+      const uniqueSuffix = Date.now() + path.extname(file.originalname);
+      cb(null,uniqueSuffix);
+    }
+  })
+  const upload = multer({ storage: storage })
+
+  
+
 // view engine
-const app = express();
+const app = express(); // form-data postman
 app.set('view engine','ejs');
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.urlencoded({ extended: true }));
 // mongo db
 
 const dbURI = "mongodb+srv://mina:kmNPCmGAiShEzoN9@cluster0.vhadudf.mongodb.net/ECommerceApp?retryWrites=true&w=majority"
@@ -19,9 +42,9 @@ mongoose.connect(dbURI).then((result)=>{app.listen(3000);}).catch((err)=>{consol
 
 // middleware
 app.use(express.urlencoded({extended:true}));
-app.use(express.static('public'));
+app.use(express.static('products'));
 app.use(express.json());
-
+// app.use(upload.single());
 
 app.get('/',async(req,res)=>{
     await User.find().then(result=>{
@@ -29,6 +52,24 @@ app.get('/',async(req,res)=>{
     });
     
 });
+
+
+const createCart = async(userId)=>{
+
+    const cart = new Cart({
+        notes:" ",
+        totalPrice:0,
+        quantity:0,
+        products:[],
+        createdBy:userId,
+    });
+    await cart.save()
+    .then(result=>{console.log("Cart added");})
+    .catch(err=>{console.log(err);});
+
+}; 
+
+
 
 app.post('/users',async(req,res)=>{
  
@@ -45,6 +86,7 @@ app.post('/users',async(req,res)=>{
      .then(result=>{
          console.log("User Added");
          res.json(result);
+         createCart(result._id);
 
      })
      .catch(err=>{
@@ -89,7 +131,38 @@ app.delete('/users/:userId',async(req,res)=>{
 
 
 
+app.post('/products',upload.single('image'),async(req,res)=>{
+    console.log(req.file);
 
+    const product = new Product({
+        name : req.body.name,
+        image : req.file.path,
+        description : req.body.description,
+        price : req.body.price,
+        category:  req.body.category,
+        quantity:  req.body.quantity,
+        sellerId : req.body.sellerId,
+    });
+
+    await product.save()
+    .then(result=>{
+        console.log('Product added');
+    })
+    .catch(err=>{
+        console.log(err);
+    });
+    res.send("image uploaded & Product added");
+});
+
+
+app.get('/products',async(req,res)=>{
+    await Product.find({
+        category:req.query.category,
+        sellerId:req.query.sellerId,
+    }).sort(req.query.sortBy).then(result=>{
+        res.json(result);
+    });
+});
 
 
 

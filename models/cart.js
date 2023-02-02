@@ -11,6 +11,9 @@ const cartSchema = new Schema(
             type:Number,
             required:true,
         },
+        createdBy:{
+            type:mongoose.Schema.Types.ObjectId,
+        },
         products :[
             {
                 productName:{
@@ -25,6 +28,7 @@ const cartSchema = new Schema(
                     type:Number,
                     required:true,
                 },
+
             }
         ],
     },{timestamps:true},

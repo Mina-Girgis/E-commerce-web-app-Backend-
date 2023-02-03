@@ -69,8 +69,6 @@ const createCart = async(userId)=>{
 
 }; 
 
-
-
 app.post('/users',async(req,res)=>{
  
     const user = new User(
@@ -129,8 +127,6 @@ app.delete('/users/:userId',async(req,res)=>{
 });
 
 
-
-
 app.post('/products',upload.single('image'),async(req,res)=>{
     console.log(req.file);
 
@@ -162,6 +158,87 @@ app.get('/products',async(req,res)=>{
     }).sort(req.query.sortBy).then(result=>{
         res.json(result);
     });
+});
+
+
+app.post('/users/:userId/carts/:productId',async (req,res)=>{
+    
+    try{
+        const cartId = mongoose.Types.ObjectId(req.params.userId.slice(1));
+        const productId = mongoose.Types.ObjectId(req.params.productId.slice(1));
+        
+        const product = await Product.findOne({_id:productId});
+        if(!product){
+            res.send("Product not found");
+        }else{   
+             const cart = await Cart.findOne({createdBy:cartId})
+             
+             if(!cart){
+                res.send("cart not found");
+             }else{
+                // if product exists -> update
+                let found = false;
+                cart.products.forEach((cartProduct)=>{
+                    if(cartProduct.productId.equals(productId)){
+                        found=true;
+                        cartProduct.quantity   = req.body.quantity;
+                        cartProduct.totalPrice = product.price*req.body.quantity;
+                    }
+                });
+
+                // else -> push new product;
+                if(!found){
+                    cart.products.push({
+                        productId:productId,
+                        productName:product.name,
+                        quantity:req.body.quantity,
+                        totalPrice:product.price*req.body.quantity
+                    });
+                }
+                await cart.save();    
+                res.json(cart);
+             }
+        }
+    }catch{
+        res.send("invalid Id");
+    }
+});
+
+
+
+app.get('/users/:userId/cart',(req,res)=>{
+    const userid = mongoose.Types.ObjectId(req.params.userId.slice(1));
+    Cart.findOne({createdBy:userid})
+    .then(result=>{
+        res.json(result.products);
+    })
+    .catch(err=>{
+        res.send(err);
+    });
+});
+
+
+
+app.delete('/users/:userId/carts/:productId',async(req,res)=>{
+    const userid = req.params.userId.slice(1);
+    const productId = req.params.productId.slice(1);
+    
+    await Cart.findOne({createdBy:userid})
+    .then(async (result)=>{
+        await result.products.forEach(product=>{
+            if(product.productId.equals(productId)){
+                result.products.pull(product);
+                console.log('item deleted');
+                result.save();
+                res.json(result);
+            }
+        });
+       
+    })
+    .catch(err=>{
+        res.send(err);
+    });
+
 });
 
 

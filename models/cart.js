@@ -17,6 +17,10 @@ const cartSchema = new Schema(
         },
         products :[
             {
+                productId:{
+                    type:mongoose.Types.ObjectId,
+                    required:true,
+                },
                 productName:{
                     type:String,
                     required:true,

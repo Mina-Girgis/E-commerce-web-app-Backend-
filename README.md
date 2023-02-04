@@ -9,7 +9,7 @@ this is a simple E-commerce web application that allows users to buy and sell pr
  - Add & remove products from user's cart
  
 
-# Technologies used within the project :
+# Technologies used within the project 
   - JavaScript
   - NodeJs
   - Express
